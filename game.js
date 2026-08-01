@@ -13,6 +13,7 @@ const COLORS = [
   '#e57373', // Z - red
   '#90caf9', // J - pale blue
   '#ffb74d', // L - orange
+  '#b0bec5', // Nut - metallic gray
 ];
 
 const PIECES = [
@@ -24,6 +25,7 @@ const PIECES = [
   [[5,5,0],[0,5,5],[0,0,0]],                  // Z
   [[6,0,0],[6,6,6],[0,0,0]],                  // J
   [[0,0,7],[7,7,7],[0,0,0]],                  // L
+  [[8,8,8],[8,0,8],[8,8,8]],                  // Nut (3x3 con agujero central)
 ];
 
 const LINE_SCORES = [0, 100, 300, 500, 800];
@@ -44,12 +46,13 @@ const themeToggle = document.getElementById('theme-toggle');
 const THEME_KEY = 'tetris-theme';
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
-let gridColor;
+let gridColor, holeColor;
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   themeToggle.checked = theme === 'light';
   gridColor = getComputedStyle(document.documentElement).getPropertyValue('--grid-line').trim();
+  holeColor = getComputedStyle(document.documentElement).getPropertyValue('--panel-bg').trim();
   localStorage.setItem(THEME_KEY, theme);
 }
 
@@ -67,7 +70,7 @@ function createBoard() {
 }
 
 function randomPiece() {
-  const type = Math.floor(Math.random() * 7) + 1;
+  const type = Math.floor(Math.random() * 8) + 1;
   const shape = PIECES[type].map(row => [...row]);
   return { type, shape, x: Math.floor(COLS / 2) - Math.floor(shape[0].length / 2), y: 0 };
 }
@@ -193,6 +196,25 @@ function drawBlock(context, x, y, colorIndex, size, alpha) {
   context.globalAlpha = 1;
 }
 
+function drawHole(context, x, y, size, alpha) {
+  context.globalAlpha = alpha ?? 1;
+  context.beginPath();
+  context.arc(x * size + size / 2, y * size + size / 2, size * 0.36, 0, Math.PI * 2);
+  context.fillStyle = holeColor;
+  context.fill();
+  context.strokeStyle = 'rgba(0,0,0,0.35)';
+  context.lineWidth = 2;
+  context.stroke();
+  context.globalAlpha = 1;
+}
+
+function isNutRing(r, c) {
+  for (let dr = -1; dr <= 1; dr++)
+    for (let dc = -1; dc <= 1; dc++)
+      if (!(dr === 0 && dc === 0) && board[r + dr][c + dc] !== 8) return false;
+  return true;
+}
+
 function drawGrid() {
   ctx.strokeStyle = gridColor;
   ctx.lineWidth = 0.5;
@@ -219,6 +241,11 @@ function draw() {
     for (let c = 0; c < COLS; c++)
       drawBlock(ctx, c, r, board[r][c], BLOCK);
 
+  // locked nut holes
+  for (let r = 1; r < ROWS - 1; r++)
+    for (let c = 1; c < COLS - 1; c++)
+      if (!board[r][c] && isNutRing(r, c)) drawHole(ctx, c, r, BLOCK);
+
   if (gameOver) return;
 
   // ghost
@@ -227,11 +254,13 @@ function draw() {
     for (let c = 0; c < current.shape[r].length; c++)
       if (current.shape[r][c])
         drawBlock(ctx, current.x + c, gy + r, current.shape[r][c], BLOCK, 0.2);
+  if (current.type === 8) drawHole(ctx, current.x + 1, gy + 1, BLOCK, 0.2);
 
   // current piece
   for (let r = 0; r < current.shape.length; r++)
     for (let c = 0; c < current.shape[r].length; c++)
       drawBlock(ctx, current.x + c, current.y + r, current.shape[r][c], BLOCK);
+  if (current.type === 8) drawHole(ctx, current.x + 1, current.y + 1, BLOCK);
 }
 
 function drawNext() {
@@ -243,6 +272,7 @@ function drawNext() {
   for (let r = 0; r < shape.length; r++)
     for (let c = 0; c < shape[r].length; c++)
       drawBlock(nextCtx, offX + c, offY + r, shape[r][c], NB);
+  if (next.type === 8) drawHole(nextCtx, offX + 1, offY + 1, NB);
 }
 
 function endGame() {
