@@ -1,0 +1,56 @@
+# Taxonomía de labels del proyecto.
+# Fuente de verdad para el workflow de triaje (.github/workflows/claude-issue-triage.yml),
+# que las sincroniza en GitHub y limita a Claude a elegir solo entre estos nombres.
+
+# --- Tipo (elegir exactamente uno) ---
+- name: bug
+  color: d73a4a
+  description: Something isn't working
+- name: enhancement
+  color: a2eeef
+  description: New feature or request
+- name: documentation
+  color: 0075ca
+  description: Improvements or additions to documentation
+- name: refactor
+  color: fbca04
+  description: Restructuring existing code without changing behavior
+- name: performance
+  color: 5319e7
+  description: Related to speed, memory or rendering performance
+- name: question
+  color: d876e3
+  description: Further information is requested
+
+# --- Área (elegir uno o más) ---
+- name: "area:gameplay"
+  color: 0e8a16
+  description: Pieces, rotation, collision, scoring, leveling, locking
+- name: "area:render"
+  color: 1d76db
+  description: Canvas rendering — draw, drawBlock, drawGrid, drawNext, ghost piece
+- name: "area:input"
+  color: 1d76db
+  description: Keyboard input handling
+- name: "area:ui"
+  color: 1d76db
+  description: index.html / style.css / overlays / visual layout
+- name: "area:ci"
+  color: 5319e7
+  description: GitHub Actions workflows and tooling
+
+# --- Prioridad (elegir exactamente uno) ---
+- name: "priority:high"
+  color: b60205
+  description: Breaks the game or blocks core functionality
+- name: "priority:medium"
+  color: d93f0b
+  description: Noticeable issue without blocking normal play
+- name: "priority:low"
+  color: fef2c0
+  description: Minor, cosmetic, or nice-to-have
+
+# --- Estado ---
+- name: needs-info
+  color: e4e669
+  description: Missing reproduction steps or context needed to diagnose
