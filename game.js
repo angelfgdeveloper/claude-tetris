@@ -39,8 +39,28 @@ const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
+const themeToggle = document.getElementById('theme-toggle');
+
+const THEME_KEY = 'tetris-theme';
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let gridColor;
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  themeToggle.checked = theme === 'light';
+  gridColor = getComputedStyle(document.documentElement).getPropertyValue('--grid-line').trim();
+  localStorage.setItem(THEME_KEY, theme);
+}
+
+function initTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  applyTheme(saved === 'light' ? 'light' : 'dark');
+}
+
+themeToggle.addEventListener('change', () => {
+  applyTheme(themeToggle.checked ? 'light' : 'dark');
+});
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -165,11 +185,15 @@ function drawBlock(context, x, y, colorIndex, size, alpha) {
   // highlight
   context.fillStyle = 'rgba(255,255,255,0.12)';
   context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+  // outline (keeps pale colors like the yellow O-piece legible on light backgrounds)
+  context.strokeStyle = 'rgba(0,0,0,0.25)';
+  context.lineWidth = 1;
+  context.strokeRect(x * size + 1.5, y * size + 1.5, size - 3, size - 3);
   context.globalAlpha = 1;
 }
 
 function drawGrid() {
-  ctx.strokeStyle = '#22222e';
+  ctx.strokeStyle = gridColor;
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
@@ -257,6 +281,7 @@ function loop(ts) {
 }
 
 function init() {
+  initTheme();
   board = createBoard();
   score = 0;
   lines = 0;
